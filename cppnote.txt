@@ -1,0 +1,701 @@
+I am a Linux/Mac programmer, so what I am showing below are more natural to
+people who are like me.
+In this introduction to medium level (I assume you know basic object oriented
+functionalities, e.g. writing simple class and class inheritance) c++ programming,
+I will cover how to write makefile, const keyword, inheritance and polymorphism.
+Hope you can learn something.
+Procedural programming languages like C are build on units of functions. However,
+as programs grow lager, it is difficult to maintain and reuse, i.e., they lost
+flexibility. Object oriented programming is an approach to eliminate the weakness
+of su traditional languages. Two central concepts of OOP are "object" and "class".
+Class is the abstract one. You can think that the word "robot" is no more than
+an abstract idea/name, it has a blueprint (methods) to build an robot. But before
+you really build a robot, it is just an idea. Until the robot was really build,
+you have and "object" which is an instance of the "robot" class. OOP programming
+languages just provide flexible ways make the "robot" class easy to extend (inheritance,
+polymorphism, encapsulation, etc). Class is nothing but a generalization of struct
+in standard C by allowing member functions/methods (sure there are some subtle difference).
+
+1. Compilers, makefiles
+1.1. To compile on Linux/Mac, you have to know what compiler to choose to compile your
+code. I summarize the difference between gcc/g++/cc below:
+  a) gcc is a GUN C compiler from the GCC (GNU Compiler Collections).
+     So you see it compiles c without any problem;
+  b) g++ is the GNU C++ compiler from the GCC;
+  c) CC is the platform-specific or in other words, CC/cc is an environment variable
+     referring to the c++/c compiler.
+     On Solaries, CC is the Sun C++ compiler and cc is the Sun C compiler
+     On linux, CC is more likely linked to g++ and cc is a link to gcc
+
+1.2. Makefile, Make/CMake
+If you want to code like a professional programmer, try write with Vi/Vim.
+To compile your program you will have to use makefiles. Let's
+first introduce CMake and Make.
+There are lots of open source projects available on internet and most people will
+just download and run "cmake" or "make" in the terminal to compile the code blindly.
+But as programmers, we need to care about what is the whole process and why it
+is structured that way, what is the difference between Make and CMake.
+   a) "Make" is a tool that controls the generation of an excecutable file from
+   your source code. It get the knowledge of how to compile your code from a file
+   called "makefile". The reason we need "Make" is because it enables the end user
+   install the program without knowing how the details of how it is done. As
+   programmers, we are responsible for how to write the makefile. "Make" is not
+   limited to a specific language. For each file in the program, the makefile specify
+   the shell commands to compile it. a.1) the shell commands run a compiler to
+   produce an object file, a.2) the linker produces an excecutable file.
+   b) cmake stands for Cross-platform Make. cmake recognize which compiler to use
+   for a given kind of source. cmake invokes the right commands for different platforms
+   automatically. Therefore there is no explicit specification of command line like
+   $(CC)
+   c) cmake does more than just "make", so it is more complex. In the long run,
+   it is good to know cmake, but for a small project makefile can do a better job.
+   The build process has one step if you have a makefile, namely typing "make"
+   at the terminal. For cmake, there are two steps, firstly you need to setup your
+   build environment (by tying cmake <source_dir> in your build directory). This
+   create a makefile or something equivalent. Then do make as usual to generate
+   the executable file.
+
+Here I only introduce you the how to write makefile. The reader should be aware that
+this only scratch the surface of makefile. But as a stater it should be enough.
+We start from some useful functions and then end this section with an example makefile.
+1.2.1 The Function wildcard
+One use of the wildcard function is to get a list of all the files of certain pattern
+in a directory, like this:
+    $(wildcard *.c)
+A common usage is to change the list of C source files into a list of object
+files by replacing the ‘.c’ suffix with ‘.o’ in the result, like this:
+    $(patsubst %.c,%.o,$(wildcard *.c))
+1.2.2 Functions for string substitution
+There are two functions for string substitution.
+$(subst from,to,text)
+a) ”subst“ function performs a textual replacement on the text text: each occurrence
+of ‘from' is replaced by 'to'. Usage: $(subst from,to,text)
+b) “patsubst” finds whitespace-separated words in 'text' that match pattern and
+replaces them with 'replacement'. Usage: $(patsubst pattern,replacement,text)
+Here are two examples:
+$(patsubst %.cpp,%.o,sub.cpp main.cpp)   will return "sub.o maini.o"
+$(patsubst %.cpp,%.o,main.cpp)      will change the extension from .cpp to .o.
+Here ‘%’ acts as a wildcard, matching any number of any characters within a word.
+1.2.2 Basics of makefile
+a) <tab> is needed when doing indentation and a line start with # is a comment.
+b) You can define variables and when you need to get access to the value of the
+variable use '$'
+e.g., define a variable and assign a value
+src = $(wildcard src/*.cpp)
+to get the value of src, you use '$(src)'
+There are more than one way to assign a value to a variable:
+a.1,
+c) $@ and $^ are special macros which returns the left and right sides of the ':'
+   the $< is the first item in the dependencies list.
+d) The ‘-c’ flag says to generate the object file, the '-o $@' says to put the
+output of the compilation in the file named on the left side of the ':'
+e) “-I<dir>”: Adds the directory <dir> to the list of directories searched for
+include files.
+e) “-L<dir>”: Adds the directory <dir> to the list of directories searched for
+library files.
+1.2.3 makefile example
+The following example shows you how to build up a simple makefile.
+Assume we have the source code files, class.hpp fun1.hpp fun2.hpp	and main.cpp,
+in the same folder. The contents of each file are listed below:
+func1.hpp:
+    int max(int i, int j){
+        return i>j?i:j;
+    }
+func2.hpp:
+    int min(int i, int j){
+        return i>j?j:i;
+    }
+class.hpp:
+    #include <iostream>
+    class person{
+    public:
+        person(){};
+        void print(){
+        std::cout<<"An object of 'person' has been created."<<std::endl;
+        }
+    };
+
+main.cpp:
+    #include <iostream>
+    #include "fun1.hpp"
+    #include "fun2.hpp"
+    #include "class.hpp"
+    int main(){
+        int i=1,j=2;
+        std::cout<<"Maximum value of 1 and 2 is: "<<max(i,j)<<std::endl;
+        std::cout<<"Minimum value of 1 and 2 is: "<<min(i,j)<<std::endl;
+        person p1;
+        p1.print();
+        std::cout<<"The end of the program"<<std::endl;
+    }
+
+To compile this set of code, you can do:
+g++ -o example main.cpp fun1.hpp fun2.hpp class.hpp
+
+For a small project, in which the number of file is limited, this is easy. When
+the project grow to a medium size, it becomes tedious to type a long string to compile.
+makefile is a flexible way to manage a small to medium-sized project without too much
+work. A more important reason for employing makefile is that
+
+The most important part of the Makefile starts with some variable definitions
+which are then followed by a set of target entries for building specific targets
+(typically .o and executable files in C and C++) or executing a set of command
+associated with a target label.
+The following is the generic target entry form:
+--------------
+target:  dependency1 dependency2 ...
+      <tab> command
+--------------
+Note that the <tab> can not be replaced by spaces.
+
+A first version of the makefile:
+-------------------
+CC = g++
+SRC = main.cpp
+DEPENDS = $(wildcard ./*.hpp)
+EXE = test
+
+$(EXE): $(SRC)
+        $(CC) -o $(EXE) $(SRC) $(DEPENDS)
+-------------------
+If you put this rule into a file called Makefile or makefile and then type 'make'
+on the command line it will execute the compile command.
+
+A second version of the makefile:
+-------------------
+CC = g++
+SRC = $(wildcard ./*.cpp)
+#DEPENDS = $(wildcard ./*.hpp) ---This line has been replaced by '-I./'
+EXE = test
+
+# define any compile-time flags: with debugging information (-g)
+CFLAGS = -Wall -g
+
+$(EXE): $(SRC)
+        @echo Compiling the executable file   #print information
+        $(CC) $(CFLAGS) -o $(EXE) $(SRC) -I./
+
+.PHONY: clean
+clean:
+        rm -f *.o $(EXE)
+-------------------
+
+The previous example assumes all source files are in the same folder as makefile.
+  ---program dir--
+     |---makefile
+     |---src:
+           |     main.cpp
+     |---include:
+           |     fun1.hpp
+           |     fun2.hpp
+           |     class.hpp
+The makefile for this case is
+-----------------
+CC = g++
+SRC = $(wildcard src/*.cpp)
+DEPENDS = ./include
+EXE = test
+
+CFLAGS = -Wall -g
+
+$(EXE): $(SRC)
+        $(CC) $(CFLAGS) -o $(EXE) $(SRC) -I$(DEPENDS)
+
+.PHONY: clean
+clean:
+        rm -f *.o $(EXE)
+-----------------
+
+
+
+2. "const" keyword
+The concept behind "const" is simple: variables with "const" added becomes
+constants and can not be altered.
+ a) The first example is very simple, just a constant variable and we try to
+ change it in the program (sure this causes a problem).
+  -----------------
+  #include <iostream>
+  using namespace std;
+
+  int main(){
+      const int i = 1;
+      cout<<"i = "<<i<<endl;
+      i = 2;
+  }
+  ------------------
+  i) Any attempt to change the constant variable will cause a compile time
+  error, i.e., the it is not compilable.
+  ii) A constant variable must be initialized immediately in the constructor, as
+  later assignment will be considered as altering the variable;
+ b) "const" also works with pointers but one has to be very careful with where
+  "const" and * are placed, because it determines if the pointer or the value
+  the pointer points to is constant. For example:
+        const int * a=10;
+  declares that "a" is a variable pointer to a constant integer and
+        int const * a=10;
+  is an alternative equivalent. This means you cannot change the content of "a".
+  But the following is different:
+        int * const b;
+  It declares a constant pointer points to a integer.
+  You can also declare a constant pointer points to a constant variable:
+        int * const * c;
+  A rule for remembering complex statements is the "Clockwise/Spiral Rule:
+  This technique enables the programmer to parse the definition or declaration.
+  Simply start from the variable name and start to read the definition in a
+  spiral/clockwise direction until you finish the whole statement.
+  For example:
+              |--------------
+              | |---------  |
+              | | *--|   |  |
+      const int * a=10;  |  |
+        |     | |____|   |  |
+        |     -----------|  |
+        --------------------|
+   You read this as 'a' is a pointer points to a integer which is constant.
+   Similarly, "int * const b;" reads b is a constant pointer to an integer.
+c) It gets messy in parameter passing.
+  Before we get into the role of "const" in parameter passing, let's first talk
+  about two ways of passing parameters.
+  c.1) "pass by value". By definition it means you are making a copy in memory of
+  the actual parameters. Use pass by value on when you want to run calculates but
+  not intend to change the value.
+  c.1) "pass by reference" also called "pass by address", a copy of the address
+  of the parameters is stored. Use pass by reference when you want to alter the
+  value of the parameter.
+  The addition of an "&" to the parameter causes the actual variable itself.
+  (the addition of "&" is confusing because '&' in front of an variable ELSEWHERE
+  generates a pointer!).
+  The following example show the two way of passing parameters:
+  ----------------
+  #include <iostream>
+  using namespace std;
+  void swapByValue(int a, int b);
+  void swapByRef(int& a, int& b);
+
+  int main(){
+      //const int i = 1,j = 2;
+      int i = 1,j =2 ;
+      cout<<"i = "<<i<<", j="<<j<<endl;
+      swapByValue(i,j);
+      cout<<"After swapByValue, i = "<<i<<", j="<<j<<endl;
+      swapByRef(i,j);
+      cout<<"After swapByRef, i = "<<i<<", j="<<j<<endl;
+  }
+
+  void swapByValue(int num_a,int num_b){
+      int temp = a;
+      a = b;
+      b =temp;
+  }
+
+  void swapByRef(int& num_a,int& num_b){
+      int temp = a;
+      a = b;
+      b =temp;
+  }
+  -----------------
+  OUTPUT:
+  i = 1, j=2
+  After swapByValue, i = 1, j=2
+  After swapByRef, i = 2, j=1
+  =================
+  Note that
+  c.1) swapByValue exchange the the value at the local (within the function)
+  memory, but the global value are not swapped. The swapByRef is able to change
+  the global value successively.
+  c.2) If the constant version of i,j is used (line 8), the code is not able
+  to compile.
+  c.3) A few extra words on the memory allocation: the "pass by value" creates
+  a new memory (duplication to the i,j in main program). Everything is done on
+  the local (within the function) memory. These memory are deallocated after
+  the function calling. "pass by reference" is especially useful when copying
+  variable costs too much memory or time.
+  But where does "const" come into this? Well, if you want to pass a big structure
+  but at the same time don't want to alter the value, you can use constant reference.
+  E.g.,
+      void Subroutine4(big_structure_type const &Parameter1);
+ d) "const" at the end of class member function declaration means that the function
+  can neither change the class members (except mutable) nor call any non-
+  const member function. It also means the function can be called via a const
+  object of the class.
+  The following example shows how to change mutable member in const function
+  via mutable keyword.
+  class Foo
+  {
+  private:
+      mutable bool done_;
+  public:
+      void doSomething() const { ...; done_ = true; }
+  };
+  Newbies can make error code easily. For example, the following code is wrong
+  template<typename T>
+  inline unsigned int abs(const T& t) const
+  {
+     return t>0?t:-t;
+  }
+  The ending 'const' specifies that you will not modify any member variables of the
+  class abs belongs to. Since there is no class where this function belongs to,
+  you get an error. So const function must belong to a class. The const modifier
+  at the end of the function declaration applies to the hidden this parameter
+  for member functions. Solution to the problem: is to either become a class
+  member function or remove the const keyword const opposite end.
+
+https://github.com/dmoulding/boilermake
+3. “static" keyword
+  3.2 static member data of a class
+  static member data applies to a class as a whole, rather than to a particular
+  object. Only one copy of such data exists for the entire class. It can be accessed
+  outside the class using scope resolution operator. See the following example.
+  #include <cstring>
+  #include <iostream>
+  using namespace std;
+  class person{
+      private:
+      char name[10];
+      public:
+      static int number;
+      person(char* NAME){
+          strcpy(name,NAME);
+          number++;
+      }
+      ~person(){
+          number--;
+      }
+  };
+  //static member data must be initialized outside of the class;
+  int person::number = 0;
+  int main(){
+      person* a = new person((char *)"David");
+      person* b = new person((char *)"Richard");
+      cout<<"Totally "<<person::number<<" objects of person class"<<
+          "have been created"<<endl;
+      delete a;
+      cout<<person::number<<" objects of person class left"<<endl;
+      return 1;
+  }
+  A class 'static' variable is one where there is only one copy that is shared
+  by every instance of the class.
+  For integral values, you also have the option of initializing a static const
+  right in the class definition:
+  class Foo {
+  private:
+      static const int myInt = 1;
+  };
+  This is a single value shared by all instances of the class that cannot be changed.
+  For an "instance" variable, you can initialize them (giving them a default value)
+  in an constructor:
+  Foo {
+  private:
+    int myInt;
+  public:
+    Foo() : myInt(1) {}
+  };
+  3.3 static function of a class
+  static member function applies to the entire class rather than to a particular
+  object. For example, we can add static member function to change the static
+  member data, number
+  //add this member function to the class
+  static void setNum(){
+    number = 0;
+  }
+  //To call in main:
+  person::setNum();
+  Clearly, to use the static members, one has always to use the scope resolution
+  operator.
+
+4. Class inheritance
+  A derived class can inherit properties and methods of the base class. The base class
+  can be publicly or privately derived inherits by the derived class. The difference
+  is that a public derivation can access the public member of the base class
+  and a private derivation can not even access the public members. The private members
+  can never be inherited even the derivation is publicly derived.
+  Even though I never see the need of private derivation but let's demonstrate this (error).
+  In the future you will know why there is the keyword "public" when you define a
+  derived class.
+
+  #include <cstring>
+  #include <iostream>
+  using namespace std;
+  class people{
+      private:
+          int age;
+          char name[12];
+
+      public:
+      int ID;
+      people(){         //defalut constructor
+      }
+      void setinfo(const int myage,const char* myname){
+          strcpy(name,myname);
+          age=myage;
+      }
+      void printinfo(){
+          cout<<"Name: "<<name<<endl;
+          cout<<"Age: "<<age<<endl;
+      }
+  };
+  class male:private people{
+      public:
+      male(){         //defalut constructor
+      }
+      male(const int myage,const char* myname){
+          ID=200;
+          setinfo(myage,myname);
+      }
+      void print(){
+          printinfo();
+          cout<<"ID:"<<ID<<endl;
+      }
+  };
+
+  class female:public people{
+      //public derivation, works!
+      public:
+      female(){         //defalut constructor
+          ID =2000;
+      }
+      female(const int myage,const char* myname){
+          people::setinfo(myage,myname);
+      }
+      void print(){
+          people::printinfo();
+          cout<<"ID:"<<ID<<endl;
+      }
+  };
+
+  int main(){
+      male m(23,"David");
+      m.print();
+      // try to access the private member function, but will fail.
+      // Error: 'void people::printinfo()' is inaccessible
+      m.printinfo();
+      //why the following line won't compile?
+      //error message:  conversion from 'female*' to non-scalar type 'female' requested
+      //Fails because new keyword will return a pointer.
+      //female fm = new female(20,"Scarlett");
+      female* fm = new female(20,"Scarlett");
+      fm->print();
+      delete fm;
+      return 1;
+  }
+  Here I created two objects, m and fm, in two different ways on purpose.
+  a) The object m was create with out a "new" operator, which means m is created
+    on the stack (Automatic memory allocation). It is created when the program
+    enter the relevant block (in this example, the main function) and deleted
+    automatically when the block is exited.
+  b) The object fm was created with "new" operator, which indicates that it is
+    created on the heap (Dynamic memory allocation ). When we no longer need a
+    dynamically allocated variable, we need to explicitly tell the program to free
+    the memory for reuse.
+
+5. Pointer and reference
+  * and & differ in a couple of ways. "&" denotes a reference instead of pointer
+  to an object. Or more specifically, pointer points to the address
+  of a data while the reference points to the data itself.
+  In a function declaration, "&" means return a reference. For example
+     "const string &GetMethodName() { ... }"
+  return a constant reference to variable.
+  b) a pointer can be re-assigned and a reference cannot(must be assigned at
+  initialization).
+  ----------------
+  int x = 6;
+  int y = 6;
+  int *p;
+  p=&x;
+  p=&y;
+  *p=10;
+  assert(x == 6);
+  assert(y == 10);
+  ----------------
+  int a = 6;
+  int &c = a;
+  ----------------
+
+
+
+6. Polymorphism
+  Polymorphism means that same code or operations or objects behave differently
+  in different contexts.
+  For example:
+     1+2  //operations on two integers
+     1.+2. //operation on two double type
+     "Hello "+"world" //operation on two strings.
+  There are two types of polymorphism.
+     -- Compile time polymorphism (e.g., function overloading)
+     -- Run time polymorphism (use of virtual function)
+
+  a) Virtual function & abstract class
+
+  ================
+  #include <iostream>
+  using namespace std;
+
+  class polygon{
+        protected:
+        int width, height;
+        public:
+        polygon(int w=0,int h=0){
+                width = w;
+                height = h;
+        }
+        void setValue(int w,int h){
+                width = w;
+                height = h;
+        }
+        virtual float area(){
+                return 0;
+        }
+        /*void print() const{
+                cout<<"Width = "<<width<<", height = "<<height
+                <<", area = "<<area()<<endl;
+        }*/
+        //This section is not going to compile, because const function can
+        //only call const function, however area() is not.
+        // error: passing 'const polygon' as 'this' argument discards qualifiers
+        // [-fpermissive]  <<", area = "<<area()<<endl;
+
+        void print(){
+                cout<<"Width = "<<width<<", height = "
+                <<height<<", area = "<<area()<<endl;
+        }
+  };
+  class rectangle:public polygon{
+          public:
+          float area(){
+                  return width*height;
+          }
+  };
+
+  class triangle:public polygon{
+          public:
+          float area(){
+                  return width*height/2.;
+          }
+  };
+
+  int main(){
+          polygon p;
+          p.print();
+          p.setValue(3,4);
+          p.print();
+
+          rectangle r;
+          r.setValue(5,6);
+          r.print();
+
+          triangle t;
+          t.setValue(7,8);
+          t.print();
+  }
+  ================
+
+  Abstract base classes are classes having virtual functions without definition.
+
+5. Templates
+  a) Function template
+  First take a look at the following example. From there it is clear why we need
+  templates.
+  =================
+  #include <iostream>
+  using namespace std;
+
+  int min(int a,int b);
+  float min(float a, float b);
+
+  int main(){
+          int a1=1,b1=2;
+          cout<<"The smaller of 1 and 2 is: "<<min(1,2)<<endl;
+
+          float a2=1.,b2=2.;
+          cout<<"The smaller of 1 and 2 is: "<<min(1,2)<<endl;
+  }
+
+  int min(int a,int b){
+          return a<b?a:b;
+  }
+
+  float min(float a, float b){
+          return a<b?a:b;
+  }
+
+  //...continue this if you have more arguments and
+  //return types.
+  ================
+  In this example, whenever the arguments and return type changes, you need to
+  anticipate all possible type and write multiple functions for the same functionality
+  c++ provide templates as a way of generic programming. You can simply use a
+  vague or generic type to hold the position for variable type.
+  ================
+  //Note that this example is not able to compile, see the following explanation.
+  #include <iostream>
+  using namespace std;
+
+  template<class T>
+  T min(T a, T b){
+         return a>b?a:b;
+  }
+
+  int main(){
+        float x=1.2,y=1.;
+
+        float a = 1.2;
+        int b=1;
+        float c;
+
+        cout<<"When all parameters have the same \
+        type, the function return the min value of \
+        1.2 and 1.0 as: "<<min(x,y)<<endl;
+
+        cout<<"When the parameters have different \
+        types, the function return the min value of \
+        1 and 0.99 as: "<<min(x,y)<<endl;
+
+        return 1;
+  }
+  ===============
+  Here the easy fix is by using a type parameter, the function becomes more general
+  that the function is able to handle any type of arguments as long as their
+  types match! However this code is not able to compile because the calling
+  of the function min is ambiguous. To make the function able to take different
+  return value and arguments types, you can use variable type holders. Here is
+  a simple fix:
+  ===============
+  template<class T, class U, class V>
+  T min(U a, V b){
+          return a>b?a:b;
+  }
+  ===============
+  Now you can compile and run the program. You may have noticed that, the second
+  calculation is actually wrong!
+
+  So you can think of function template as short hand of function overloading.
+  b) class template
+  The idea of class template is similar to function template.
+
+  The first thing to remember of class template is the primitive types must be
+  const.
+
+6. 'auto' keyword
+
+7. Lambda expressions (new feature in c++11)
+
+8. Exceptions
+
+
+9. STL: standard library
+
+
+
+
+Some practical examples
+1. #include guards.
+Once the header is included, it checks if a unique value (in this case
+HEADERFILE_H) is defined. Then if it's not defined, it defines it and continues
+to the rest of the page.
+When the code is included more than once, the latter #include directive fails,
+and nothing is imported.
+
+
+cg
+https://www.youtube.com/watch?v=IlVx_t0VseU
+https://www.youtube.com/watch?v=Gh57pu9aZ-c
